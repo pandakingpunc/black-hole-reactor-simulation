@@ -1,5 +1,7 @@
 # Kerr–Penrose Black Hole Reactor
 
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.23674565.svg)](https://doi.org/10.5281/zenodo.23674565)
+
 An interactive simulation of a power plant that extracts energy from a spinning black hole through the **Penrose process**. Particles are fired into the ergosphere of a Kerr black hole, split in two at their turning point, and the negative-energy fragment falls through the horizon while the other escapes with more energy than was sent in. The black hole spins down; the difference goes to the grid.
 
 The particles are not animated along made-up curves: each one follows a real Kerr geodesic, every split conserves four-momentum exactly, and the reactor's mass and spin evolve under the Hawking area theorem.
@@ -68,4 +70,12 @@ Built with React, TypeScript, Vite and Tailwind CSS.
 
 ## License
 
-[MIT](LICENSE) © 2026 Mustafa Karatüm. If you use this software, please cite it using [CITATION.cff](CITATION.cff).
+[MIT](LICENSE) © 2026 Mustafa Karatüm.
+
+## Citation
+
+If you use this software, please cite it using [CITATION.cff](CITATION.cff) or the Zenodo record:
+
+> Karatüm, M. (2026). *Kerr–Penrose Black Hole Reactor* (v1.0.0). Zenodo. https://doi.org/10.5281/zenodo.23674566
+
+The concept DOI [10.5281/zenodo.23674565](https://doi.org/10.5281/zenodo.23674565) covers all versions and always resolves to the latest one.
