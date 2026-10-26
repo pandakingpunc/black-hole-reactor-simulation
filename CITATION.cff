@@ -1,0 +1,27 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it using the metadata from this file."
+type: software
+title: "Kerr–Penrose Black Hole Reactor"
+abstract: >-
+  An interactive browser simulation of a reactor that extracts rotational
+  energy from a Kerr black hole through the Penrose process. Feed particles and
+  split photons follow Kerr geodesics in the equatorial plane (RK4 in the affine
+  parameter), each split conserves four-momentum exactly, the emission axis is
+  optimized over directions whose fragment can escape, and the black hole's mass
+  and spin evolve under the Hawking area theorem, with Hawking evaporation and
+  optional prograde ISCO accretion. English and Turkish interfaces.
+authors:
+  - family-names: Karatüm
+    given-names: Mustafa
+    orcid: "https://orcid.org/0009-0006-7053-2872"
+version: 1.0.0
+license: MIT
+repository-code: "https://github.com/pandakingpunc/black-hole-reactor-simulation"
+url: "https://pandakingpunc.github.io/black-hole-reactor-simulation/"
+keywords:
+  - black hole
+  - Kerr metric
+  - Penrose process
+  - ergosphere
+  - general relativity
+  - simulation
