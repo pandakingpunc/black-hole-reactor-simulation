@@ -15,6 +15,7 @@ authors:
     given-names: Mustafa
     orcid: "https://orcid.org/0009-0006-7053-2872"
 version: 1.0.0
+date-released: 2026-10-26
 license: MIT
 repository-code: "https://github.com/pandakingpunc/black-hole-reactor-simulation"
 url: "https://pandakingpunc.github.io/black-hole-reactor-simulation/"
