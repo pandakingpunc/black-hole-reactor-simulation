@@ -1,7 +1,7 @@
 {
   "name": "black-hole-reactor-simulation",
   "private": true,
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Interactive simulation of a Kerr black hole reactor that extracts rotational energy through the Penrose process.",
   "author": "Mustafa Karatüm",
   "license": "MIT",
