@@ -1,5 +1,6 @@
 import type { Params, Reactor, Tune } from '../sim/engine';
 import { Panel, Slider, Toggle } from './ui';
+import PotentialChart from './PotentialChart';
 import { si, massLabel } from '../lib/format';
 import * as K from '../sim/kerr';
 import { useLang } from '../i18n';
@@ -42,7 +43,7 @@ export default function ControlPanel({ params, reactor, rSplit, tune, set, setRe
             label={t.cpMass}
             value={Math.log10(Math.max(reactor.Mkg, 1e6))}
             min={9}
-            max={31}
+            max={32}
             step={0.05}
             accent="violet"
             onChange={(v) => setReactor({ Mkg: Math.pow(10, v), M0: Math.pow(10, v) })}
@@ -135,6 +136,11 @@ export default function ControlPanel({ params, reactor, rSplit, tune, set, setRe
             />
           </div>
         </div>
+      </Panel>
+
+      <Panel title={t.pcTitle} icon={<Dot c="bg-sky-400" />}>
+        <PotentialChart a={a} tune={tune} jitter={params.jitter} />
+        <p className="mt-1.5 text-[9.5px] leading-snug text-slate-500">{t.pcHint}</p>
       </Panel>
 
       <Panel title={t.cpCycle} icon={<Dot c="bg-amber-400" />}>

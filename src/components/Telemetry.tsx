@@ -6,6 +6,7 @@ import { useLang } from '../i18n';
 
 const WORLD_POWER = 2.0e13; // W — insanlığın toplam birincil enerji tüketim gücü
 const SUN_LUM = 3.828e26; // W
+const A_FLOOR = 0.78; // ergosfer içinde dönüş noktasının kaybolduğu spin
 
 export default function Telemetry({ engine }: { engine: ReactorEngine }) {
   const { lang, t } = useLang();
@@ -15,7 +16,11 @@ export default function Telemetry({ engine }: { engine: ReactorEngine }) {
   const c2 = K.C * K.C;
   const mIrrFrac = K.mIrrNorm(a);
   const rotJ = rc.Mkg * (1 - mIrrFrac) * c2;
-  const rotJ0 = rc.M0 * (1 - K.mIrrNorm(Math.max(rc.aStar, 0.9995))) * c2;
+  // depo kapasitesi: aynı kütlede slider'ın izin verdiği en yüksek spin
+  const rotJ0 = rc.M0 * K.rotEnergyFraction(0.9995) * c2;
+  // Çevrim a* ≈ 0.78'de durur; ondan sonrası yakıt olsa da çekilemez.
+  // Tersinir sınır (M_irr sabit): M_taban = M_irr / m_irr(a_taban)
+  const usableJ = a > A_FLOOR ? Math.max(0, rc.Mkg * (1 - mIrrFrac / K.mIrrNorm(A_FLOOR))) * c2 : 0;
   const nom = engine.nominalSplit();
   const bal = engine.balance;
   const tune = engine.tune;
@@ -24,8 +29,8 @@ export default function Telemetry({ engine }: { engine: ReactorEngine }) {
   const rgeo = (K.G * rc.Mkg) / c2;
   const ph = K.hawkingPower(rc.Mkg);
   const net = rc.power - (engine.params.hawking ? ph : 0);
-  const tLeft = net > 0 ? rotJ / net : Infinity;
-  const worldRatio = net / WORLD_POWER;
+  const tLeft = net > 0 ? usableJ / net : Infinity;
+  const worldRatio = Math.max(net, 0) / WORLD_POWER;
   const th = K.hawkingTemp(rc.Mkg, a);
   const tot = engine.counts.harvested + engine.counts.lostEsc;
   const yieldPct = tot > 0 ? engine.counts.harvested / tot : 0;
@@ -157,8 +162,12 @@ export default function Telemetry({ engine }: { engine: ReactorEngine }) {
             <span className="font-mono text-slate-300">{dur(tLeft, lang)}</span>
           </div>
           <div className="flex justify-between text-[9.5px] text-slate-500">
+            <span>{t.tmUsable}</span>
+            <span className="font-mono text-slate-300">≤ {si(usableJ, 'J', 2)}</span>
+          </div>
+          <div className="flex justify-between text-[9.5px] text-slate-500">
             <span>{t.tmFloor}</span>
-            <span className="font-mono text-amber-300/80">a* ≈ 0.78</span>
+            <span className="font-mono text-amber-300/80">a* ≈ {A_FLOOR}</span>
           </div>
         </div>
       </Panel>

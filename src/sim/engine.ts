@@ -39,6 +39,7 @@ export interface Event {
   Eneg: number;
   Lneg: number;
   rel: number; // olay kazancı / o andaki nominal kazanç
+  escaped: boolean; // kaçan fotonun önünde bariyer yok (analitik, R(r) > 0)
 }
 
 export interface Reactor {
@@ -129,9 +130,7 @@ export class ReactorEngine {
   splitFlashes: { r: number; phi: number; t: number; gain: number }[] = [];
   counts = { injected: 0, split: 0, harvested: 0, lostEsc: 0, missed: 0, fizzle: 0, rejected: 0 };
 
-  yieldSmooth = 0.8;
-  private hWin = 0;
-  private lWin = 0;
+  yieldSmooth = 1;
   etaSmooth = 0;
   simTime = 0;
   effTimeScale = 1;
@@ -256,9 +255,7 @@ export class ReactorEngine {
     };
     this.simTime = 0;
     this.powerAvg = 0;
-    this.yieldSmooth = 0.8;
-    this.hWin = 0;
-    this.lWin = 0;
+    this.yieldSmooth = 1;
     this.etaSmooth = 0;
     this.tuneCache = null;
     this.nomCache = null;
@@ -325,10 +322,9 @@ export class ReactorEngine {
     this.splitFlashes.push({ r: p.r, phi: p.phi, t: 0, gain: Math.max(s.gain, 0) });
     if (this.splitFlashes.length > 24) this.splitFlashes.shift();
 
-    // dönüş noktasında p^r ≈ 0 olduğundan küçük bir itmeyle başlat
-    const nudge = (sign: number) => p.r * (1 + sign * 2.5e-3);
-    const neg = makeParticle(this.nextId++, 'neg', nudge(s.negSign), p.phi, s.negSign, s.neg);
-    const esc = makeParticle(this.nextId++, 'esc', nudge(s.escSign), p.phi, s.escSign, s.esc);
+    // ikinci mertebe entegratör dönüş noktasından kendisi çıkar; itme gerekmez
+    const neg = makeParticle(this.nextId++, 'neg', p.r, p.phi, s.negSign, s.neg);
+    const esc = makeParticle(this.nextId++, 'esc', p.r, p.phi, s.escSign, s.esc);
     neg.energy = Math.abs(s.neg.E);
     esc.energy = Math.abs(s.esc.E);
     this.particles.push(neg, esc);
@@ -341,6 +337,7 @@ export class ReactorEngine {
       Eneg: s.neg.E,
       Lneg: s.neg.L,
       rel: nomGain > 1e-12 ? Math.max(s.gain, 0) / nomGain : 0,
+      escaped: res ? !!res.escapes : K.photonEscapes(s.esc, p.r, s.escSign, a, R_COLLECT),
     });
     if (this.events.length > 160) this.events.shift();
   }
@@ -390,16 +387,18 @@ export class ReactorEngine {
         if (q.r >= R_COLLECT) {
           q.dead = true;
           this.counts.harvested++;
-          this.hWin += 1;
           this.collectorFlashes.push({ phi: q.phi, t: 0, e: q.energy });
           if (this.collectorFlashes.length > 36) this.collectorFlashes.shift();
         } else if (q.r <= rp * 1.02) {
           q.dead = true;
           this.counts.lostEsc++;
-          this.lWin += 1;
         }
       }
-      if (q.age > 260) q.dead = true;
+      if (q.age > 260 && !q.dead) {
+        q.dead = true;
+        // toplayıcıya hiç varamayan kaçış fotonu da hasat edilmemiş enerjidir
+        if (q.kind === 'esc') this.counts.lostEsc++;
+      }
     }
     this.particles = this.particles.filter((x) => !x.dead);
 
@@ -408,11 +407,17 @@ export class ReactorEngine {
     for (const f of this.splitFlashes) f.t += dtReal;
     this.splitFlashes = this.splitFlashes.filter((f) => f.t < 0.7);
 
-    // kayan pencere ile toplama verimi (3 s zaman sabiti + zayıf önsel)
-    const decay = Math.exp(-dtReal / 6);
-    this.hWin *= decay;
-    this.lWin *= decay;
-    this.yieldSmooth = (this.hWin + 0.15) / (this.hWin + this.lWin + 0.18);
+    // Toplama verimi: son bölünmelerde kaçan fotonun önü açık mıydı (analitik
+    // bariyer testi). Ekrandaki foton sayımından ölçmek hem toplayıcıya varış
+    // süresi kadar gecikiyor hem de tek bir yutulma y'yi 0.15'e düşürüp
+    // reaktörü saniyeler içinde zarara sokuyordu. Önsel: nominal bölünmenin öngörüsü.
+    const nom = this.nominalSplit();
+    const prior = nom && nom.escapes ? 1 : 0;
+    const n = Math.min(this.events.length, 60);
+    let ok = 0;
+    for (let i = this.events.length - n; i < this.events.length; i++) if (this.events[i].escaped) ok++;
+    const W = 4;
+    this.yieldSmooth = (ok + W * prior) / (n + W);
   }
 
   stepMacro(dtReal: number) {

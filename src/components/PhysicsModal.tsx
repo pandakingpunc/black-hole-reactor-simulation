@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { useLang } from '../i18n';
 
 interface Props {
@@ -18,6 +19,13 @@ function H({ children }: { children: React.ReactNode }) {
 
 export default function PhysicsModal({ onClose }: Props) {
   const { lang, t } = useLang();
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [onClose]);
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm"
@@ -83,6 +91,9 @@ r² dt/dλ    = a(L − aE) + (r²+a²)P/Δ`}</F>
       <p>
         μ = 1 kütleli besleme parçacığı, μ = 0 bölünme sonrası fotonlar. R(r) &lt; 0 olduğu yerde dönüş
         noktası vardır — demetin açısal momentumu fazlaysa parçacık ergosfere giremeden <em>geri seker</em>.
+        Dönüş noktasında dr/dλ = 0 olduğundan birinci mertebe denklem orada tekildir; simülasyon bunun yerine
+        u = r² dr/dλ, du/dλ = R′(r)/(2r²) ikinci mertebe biçimini entegre eder ve parçacık dönüş noktasından
+        pürüzsüz geçer.
       </p>
 
       <H>4 · Bölünme: 4-momentum tam olarak korunur</H>
@@ -105,6 +116,11 @@ n_t 'yi maksimize eden yön:  n = ξ⊥/|ξ⊥| ,  ξ⊥ = ∂_t − E_p·u
 r → r₊ = M  ve  a → 1  ,  E_p = 1  :
 η_max = (√2 − 1)/2 = 0.2071…  →  %20.7`}</F>
       <p>
+        Klasik %20.7 sınırı, sonsuzdan durgun düşen (E_p = 1) bir ana parçacık içindir. Bağlı bir demet
+        (E_p &lt; 1) kütle-enerjisinin bir kısmını kuyuya inerken zaten bırakmıştır; bu yüzden aynı formül E_p'ye
+        göre daha yüksek verim verir. Ekstremal test bu yüzden %20.7'yi biraz aşabilir — hata değil, tanım farkı.
+      </p>
+      <p className="mt-2">
         Karşılaştırma: fisyon %0.09, füzyon %0.4, ince disk birikimi (a=0.998) %32, Blandford–Znajek
         manyetik çekim daha da fazlasını verebilir. Penrose süreci ise "yakıtsız" çalışır — yalnızca
         kara deliğin dönüşünü tüketir.
@@ -151,7 +167,7 @@ M_irr = √(M r₊ /2)   (indirgenemez kütle — asla azalamaz)
       </p>
       <F>{`M′  = M + ṁΔt⟨E_A⟩ − P_Hawking Δt/c²
 a*′ = (a* M² + ṁΔt⟨L_A⟩ M) / M′²
-P   = ṁ ⟨gain⟩ c² × (toplama verimi)`}</F>
+P   = ṁ c² (y·⟨E_esc⟩ − E_p)     (y = toplama verimi)`}</F>
 
       <H>9 · Dürüst olalım: basitleştirmeler</H>
       <ul className="ml-4 list-disc space-y-1">
@@ -202,7 +218,9 @@ r² dt/dλ    = a(L − aE) + (r²+a²)P/Δ`}</F>
       <p>
         μ = 1 for the massive feed particle, μ = 0 for the photons after the split. Where R(r) &lt; 0 there is a
         turning point — if the beam carries too much angular momentum, the particle <em>bounces back</em> before it
-        can enter the ergosphere.
+        can enter the ergosphere. Because dr/dλ = 0 there, the first-order equation is singular at a turning point;
+        the simulation instead integrates the second-order form u = r² dr/dλ, du/dλ = R′(r)/(2r²), which carries the
+        particle smoothly through it.
       </p>
 
       <H>4 · The split: four-momentum is conserved exactly</H>
@@ -226,6 +244,12 @@ direction that maximizes n_t:  n = ξ⊥/|ξ⊥| ,  ξ⊥ = ∂_t − E_p·u
 r → r₊ = M  and  a → 1 ,  E_p = 1 :
 η_max = (√2 − 1)/2 = 0.2071…  →  20.7%`}</F>
       <p>
+        The classic 20.7% bound is for a parent that falls from rest at infinity (E_p = 1). A bound beam
+        (E_p &lt; 1) has already given up part of its mass-energy on the way down the well, so the same formula yields a
+        higher efficiency relative to E_p. That is why the extremal test can edge slightly past 20.7% — a matter of
+        definition, not a bug.
+      </p>
+      <p className="mt-2">
         For comparison: fission 0.09%, fusion 0.4%, thin-disk accretion (a = 0.998) 32%, and magnetic
         Blandford–Znajek extraction can deliver even more. The Penrose process, however, runs "without fuel" — it
         only consumes the black hole's rotation.
@@ -272,7 +296,7 @@ net to grid   : y·E_esc − E_p              and  E_neg + E_esc = E_p
       </p>
       <F>{`M′  = M + ṁΔt⟨E_A⟩ − P_Hawking Δt/c²
 a*′ = (a* M² + ṁΔt⟨L_A⟩ M) / M′²
-P   = ṁ ⟨gain⟩ c² × (collection yield)`}</F>
+P   = ṁ c² (y·⟨E_esc⟩ − E_p)     (y = collection yield)`}</F>
 
       <H>9 · Being honest: simplifications</H>
       <ul className="ml-4 list-disc space-y-1">

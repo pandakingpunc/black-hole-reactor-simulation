@@ -75,7 +75,8 @@ export default function App() {
   const setReactor = useCallback(
     (p: Partial<Reactor>) => {
       Object.assign(engine.reactor, p);
-      if (p.aStar !== undefined) engine.reactor.depleted = false;
+      // yeni spin ya da kütle, tükenmiş çekirdeği yeniden canlandırır
+      if (p.aStar !== undefined || p.Mkg !== undefined) engine.reactor.depleted = false;
       force();
     },
     [engine]
@@ -208,7 +209,8 @@ export default function App() {
           />
         </aside>
 
-        <section className="flex min-h-0 flex-col gap-2.5">
+        {/* mobilde reaktör en üstte; masaüstünde ortadaki sütun */}
+        <section className="order-first flex min-h-0 flex-col gap-2.5 lg:order-none">
           <div className="relative min-h-[420px] flex-1 overflow-hidden rounded-xl border border-white/10 bg-black">
             <ReactorCanvas engine={engine} onTick={onTick} showLabels={labels} showDust={dust} />
 
@@ -247,7 +249,7 @@ export default function App() {
                   {l.t}
                 </div>
               ))}
-              <div className="max-w-[330px] pt-1 text-[9.5px] leading-tight text-slate-600">
+              <div className="hidden max-w-[330px] pt-1 text-[9.5px] leading-tight text-slate-600 sm:block">
                 {t.legendA}
                 <span className="text-rose-400">{t.legendStop}</span>
                 {t.legendB}

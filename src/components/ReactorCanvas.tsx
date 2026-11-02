@@ -319,19 +319,32 @@ export default function ReactorCanvas({ engine, onTick, showLabels, showDust }: 
         const t = tRef.current;
         ctx.font = '500 10.5px ui-monospace, SFMono-Regular, Menlo, monospace';
         ctx.textAlign = 'center';
+        // ufuk, bölünme halkası ve ergosfer birkaç piksel arayla iç içe;
+        // etiketleri halkaların DIŞINA, birbirine çakışmayacak yönlere yerleştir
         ctx.fillStyle = 'rgba(216,180,254,0.85)';
         ctx.fillText(t.cvErgo, cx, cy - 2 * scale - 8);
         ctx.fillStyle = 'rgba(253,186,116,0.8)';
-        ctx.fillText(`${t.cvHorizon}${rp.toFixed(2)}M`, cx, cy + rp * scale + 16);
-        ctx.fillStyle = 'rgba(56,189,248,0.6)';
-        ctx.fillText(t.cvCollector, cx, cy - R_COLLECT * scale + 14);
-        ctx.fillStyle = 'rgba(244,63,94,0.75)';
-        ctx.textAlign = 'left';
-        ctx.fillText(`${t.cvSplit}${rs.toFixed(2)}M`, cx + 6, cy - rs * scale - 5);
+        ctx.fillText(`${t.cvHorizon}${rp.toFixed(2)}M`, cx, cy + 2 * scale + 16);
         ctx.fillStyle = 'rgba(34,211,238,0.8)';
-        ctx.fillText(t.cvInjector, ix - 70, iy + 22);
-        ctx.fillStyle = 'rgba(192,132,252,0.55)';
-        ctx.fillText(t.cvDrag, cx + 3.4 * scale * Math.cos(-0.52), cy + 3.4 * scale * Math.sin(-0.52) - 10);
+        ctx.fillText(t.cvInjector, ix, iy - 14);
+        // dar ekranda ikincil etiketler halkaları ve köşe okumalarını boğar
+        if (scale >= 18) {
+          ctx.fillStyle = 'rgba(56,189,248,0.6)';
+          ctx.fillText(t.cvCollector, cx, cy - R_COLLECT * scale + 14);
+          const sy = cy + 4;
+          ctx.strokeStyle = 'rgba(244,63,94,0.45)';
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.moveTo(cx - rs * scale, sy - 4);
+          ctx.lineTo(cx - 2 * scale - 6, sy - 4);
+          ctx.stroke();
+          ctx.fillStyle = 'rgba(244,63,94,0.8)';
+          ctx.textAlign = 'right';
+          ctx.fillText(`${t.cvSplit}${rs.toFixed(2)}M`, cx - 2 * scale - 9, sy);
+          ctx.fillStyle = 'rgba(192,132,252,0.55)';
+          ctx.textAlign = 'left';
+          ctx.fillText(t.cvDrag, cx + 3.35 * scale * Math.cos(-0.35) + 4, cy + 3.35 * scale * Math.sin(-0.35));
+        }
       }
     };
 

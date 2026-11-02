@@ -43,10 +43,17 @@ export function si(v: number, unit = '', digits = 2): string {
   const av = Math.abs(v);
   if (av === 0) return `0 ${unit}`;
   if (av >= 1e27 || av < 1e-15) return `${sci(v, digits)} ${unit}`;
-  for (const [f, p] of PREFIX) {
+  for (let i = 0; i < PREFIX.length; i++) {
+    const [f, p] = PREFIX[i];
     if (av >= f) {
       const x = v / f;
-      return `${x.toFixed(Math.abs(x) >= 100 ? 0 : Math.abs(x) >= 10 ? 1 : digits)} ${p}${unit}`;
+      const ax = Math.abs(x);
+      // 999.6 → "1000 G" yerine bir üst ön ek: "1.00 T"
+      if (ax >= 999.5 && i > 0) {
+        const [f2, p2] = PREFIX[i - 1];
+        return `${(v / f2).toFixed(digits)} ${p2}${unit}`;
+      }
+      return `${x.toFixed(ax >= 100 ? 0 : ax >= 10 ? 1 : digits)} ${p}${unit}`;
     }
   }
   return `${sci(v, digits)} ${unit}`;

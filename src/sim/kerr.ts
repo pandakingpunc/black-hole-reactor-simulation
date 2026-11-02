@@ -87,29 +87,38 @@ export interface State {
   sign: number; // radyal yön
 }
 
-/** RK4 ile tek adım (afin parametre λ). Dönüş noktalarında yön çevrilir. */
+/** dR/dr — ikinci mertebe radyal denklemin kuvvet terimi */
+export function radialRPrime(r: number, o: Orbit, a: number): number {
+  const P = o.E * (r * r + a * a) - o.L * a;
+  const k = o.L - a * o.E;
+  return 4 * o.E * r * P - (2 * r - 2) * (o.mu * o.mu * r * r + k * k) - 2 * o.mu * o.mu * r * delta(r, a);
+}
+
+/**
+ * RK4 ile tek adım (afin parametre λ).
+ * Birinci mertebe dr/dλ = ±√R/r² dönüş noktasında tekildir: R = 0'da hız sıfır
+ * olur ve doğru işaret seçilemez (dönüş noktasında doğan foton orada takılır).
+ * Bunun yerine u = r² dr/dλ ile ikinci mertebe biçim entegre edilir:
+ *     dr/dλ = u/r² ,   du/dλ = R'(r)/(2r²)
+ * Bu sistem dönüş noktasından pürüzsüz geçer; u'nun işareti radyal yöndür.
+ */
 export function stepGeodesic(s: State, o: Orbit, a: number, dl: number): State {
-  const f = (r: number, sign: number) => ({
-    dr: dR(r, o, a, sign),
-    dp: dPhi(r, o, a),
-  });
+  const f = (r: number, u: number) => {
+    const r2 = r * r;
+    return { dr: u / r2, du: radialRPrime(r, o, a) / (2 * r2), dp: dPhi(r, o, a) };
+  };
+  const clampR = (r: number) => Math.max(r, 1e-3);
 
-  const sign = s.sign;
-  const k1 = f(s.r, sign);
-  const k2 = f(Math.max(s.r + 0.5 * dl * k1.dr, 1e-3), sign);
-  const k3 = f(Math.max(s.r + 0.5 * dl * k2.dr, 1e-3), sign);
-  const k4 = f(Math.max(s.r + dl * k3.dr, 1e-3), sign);
+  const u0 = s.sign * Math.sqrt(Math.max(radialR(s.r, o, a), 0));
+  const k1 = f(s.r, u0);
+  const k2 = f(clampR(s.r + 0.5 * dl * k1.dr), u0 + 0.5 * dl * k1.du);
+  const k3 = f(clampR(s.r + 0.5 * dl * k2.dr), u0 + 0.5 * dl * k2.du);
+  const k4 = f(clampR(s.r + dl * k3.dr), u0 + dl * k3.du);
 
-  let nr = s.r + (dl / 6) * (k1.dr + 2 * k2.dr + 2 * k3.dr + k4.dr);
+  const nr = clampR(s.r + (dl / 6) * (k1.dr + 2 * k2.dr + 2 * k3.dr + k4.dr));
+  const nu = u0 + (dl / 6) * (k1.du + 2 * k2.du + 2 * k3.du + k4.du);
   const nphi = s.phi + (dl / 6) * (k1.dp + 2 * k2.dp + 2 * k3.dp + k4.dp);
-  let nsign = sign;
-
-  // dönüş noktası kontrolü
-  if (radialR(nr, o, a) < 0 || Math.abs(nr - s.r) < 1e-12) {
-    nsign = -sign;
-    nr = s.r + (dl / 6) * -(k1.dr + 2 * k2.dr + 2 * k3.dr + k4.dr) * 0.5;
-  }
-  return { r: nr, phi: nphi, sign: nsign };
+  return { r: nr, phi: nphi, sign: nu > 0 ? 1 : nu < 0 ? -1 : s.sign };
 }
 
 // ---------------------------------------------------------------------------
@@ -330,8 +339,12 @@ export function photonEscapes(o: Orbit, r0: number, sign: number, a: number, rMa
     }
     if (!found) return false;
   }
+  // Foton tam kendi dönüş noktasında doğabilir (R(r0) ≈ 0, yuvarlama ile hafif
+  // negatif). Başlangıç noktası yerine potansiyelin dışa doğru açılıp açılmadığına bak.
   const n = 90;
-  for (let i = 0; i <= n; i++) {
+  const tol = 1e-9 * (1 + o.E * o.E * r0 * r0 * r0 * r0);
+  if (radialR(r0, o, a) < -tol) return false;
+  for (let i = 1; i <= n; i++) {
     const r = r0 + ((rMax - r0) * i) / n;
     if (radialR(r, o, a) <= 0) return false;
   }
