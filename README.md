@@ -82,6 +82,6 @@ Built with React, TypeScript, Vite and Tailwind CSS.
 
 If you use this software, please cite it using [CITATION.cff](CITATION.cff) or the Zenodo record:
 
-> Karatüm, M. (2026). *Kerr–Penrose Black Hole Reactor* (v1.0.0). Zenodo. https://doi.org/10.5281/zenodo.23674566
+> Karatüm, M. (2026). *Kerr–Penrose Black Hole Reactor* (v1.1.0). Zenodo. https://doi.org/10.5281/zenodo.23888131
 
 The concept DOI [10.5281/zenodo.23674565](https://doi.org/10.5281/zenodo.23674565) covers all versions and always resolves to the latest one.
